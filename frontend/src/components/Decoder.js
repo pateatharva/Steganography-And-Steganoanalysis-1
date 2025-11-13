@@ -135,7 +135,7 @@ function Decoder() {
                 <img
                   src={preview}
                   alt="Stego"
-                  style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
+                  style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain', border: '1px solid #ddd' }}
                 />
               </Box>
             ) : (

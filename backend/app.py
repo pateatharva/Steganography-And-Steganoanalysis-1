@@ -272,8 +272,16 @@ def hide_message():
                             user_id=user.id,
                             operation_type='encode',
                             image_path=f"/uploads/{filename}",
+                            cover_path=f"/uploads/{cover_filename}",
                             message_length=len(message),
-                            success=True
+                            success=True,
+                            # Cover image metrics (perfect values)
+                            cover_psnr=100.0,
+                            cover_ssim=1.0,
+                            # Stego image metrics (actual calculated values)
+                            stego_psnr=float(stego_psnr),
+                            stego_ssim=float(stego_ssim),
+                            stego_ber=float(stego_ber)
                         )
                         db.session.add(hist)
                         db.session.commit()
@@ -327,10 +335,37 @@ def analyze_image():
         with torch.no_grad():
             disc_output = discriminator(image_tensor)
             is_stego = torch.sigmoid(disc_output).item() < 0.5  # Less than 0.5 means it's more likely to be a stego image
+            confidence_value = float(abs(0.5 - torch.sigmoid(disc_output).item()) * 2)
+
+        # Optionally record history if JWT token is provided
+        try:
+            verify_jwt_in_request(optional=True)
+            user_id = get_jwt_identity()
+            try:
+                user_id = int(user_id) if user_id is not None else None
+            except (TypeError, ValueError):
+                user_id = None
+            if user_id:
+                with app.app_context():
+                    user = User.query.get(user_id)
+                    if user:
+                        hist = ProcessingHistory(
+                            user_id=user.id,
+                            operation_type='analyze',
+                            image_path=None,
+                            message_length=None,
+                            success=True,
+                            confidence=confidence_value
+                        )
+                        db.session.add(hist)
+                        db.session.commit()
+        except Exception:
+            # No token provided or invalid token - skip history recording
+            pass
 
         return jsonify({
             'is_stego': bool(is_stego),
-            'confidence': float(abs(0.5 - torch.sigmoid(disc_output).item()) * 2)
+            'confidence': confidence_value
         })
 
     except Exception as e:
@@ -376,10 +411,15 @@ def extract_message():
                 with app.app_context():
                     user = User.query.get(user_id)
                     if user:
+                        # Save uploaded image for future reference
+                        filename = f"decoded_{uuid.uuid4().hex}.png"
+                        file_path = os.path.join(UPLOAD_DIR, filename)
+                        image.save(file_path, format='PNG')
+                        
                         hist = ProcessingHistory(
                             user_id=user.id,
                             operation_type='decode',
-                            image_path=None,
+                            image_path=f"/uploads/{filename}",
                             message_length=len(extracted_message or ''),
                             success=True
                         )

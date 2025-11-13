@@ -9,10 +9,10 @@ import {
   Avatar,
   CircularProgress,
   Divider,
+  Alert,
 } from '@mui/material';
 import { Person as PersonIcon } from '@mui/icons-material';
 import axios from 'axios';
-import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 function Profile() {
@@ -20,6 +20,8 @@ function Profile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [updatedProfile, setUpdatedProfile] = useState({
     username: '',
     email: '',
@@ -35,12 +37,12 @@ function Profile() {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        toast.error('Please login again');
+        setError('Please login again');
         navigate('/login');
         return;
       }
 
-      const response = await axios.get('http://localhost:5000/auth/profile', {
+      const response = await axios.get('http://127.0.0.1:5000/auth/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProfile(response.data);
@@ -53,10 +55,10 @@ function Profile() {
     } catch (error) {
       console.error('Error fetching profile:', error);
       if (error.response?.status === 401) {
-        toast.error('Session expired. Please login again.');
+        setError('Session expired. Please login again.');
         navigate('/login');
       } else {
-        toast.error('Failed to load profile');
+        setError('Failed to load profile');
       }
     } finally {
       setLoading(false);
@@ -64,8 +66,11 @@ function Profile() {
   };
 
   const handleUpdate = async () => {
+    setError('');
+    setSuccess('');
+    
     if (updatedProfile.password && updatedProfile.password !== updatedProfile.confirmPassword) {
-      toast.error('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
 
@@ -79,16 +84,16 @@ function Profile() {
         dataToUpdate.password = updatedProfile.password;
       }
 
-      await axios.put('http://localhost:5000/auth/profile', dataToUpdate, {
+      await axios.put('http://127.0.0.1:5000/auth/profile', dataToUpdate, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Profile updated successfully');
+      setSuccess('Profile updated successfully');
       setEditMode(false);
       fetchProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      setError('Failed to update profile');
     }
   };
 
@@ -102,6 +107,18 @@ function Profile() {
 
   return (
     <Box sx={{ p: 3 }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+      
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      )}
+      
       <Paper sx={{ p: 3 }}>
         <Box display="flex" alignItems="center" mb={3}>
           <Avatar sx={{ width: 80, height: 80, mr: 2 }}>

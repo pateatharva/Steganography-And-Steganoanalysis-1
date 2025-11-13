@@ -27,9 +27,16 @@ def get_history():
             'id': h.id,
             'operation_type': h.operation_type,
             'image_path': h.image_path,
+            'cover_path': h.cover_path,
             'message_length': h.message_length,
             'success': h.success,
-            'timestamp': h.timestamp.isoformat()
+            'timestamp': h.timestamp.isoformat(),
+            'cover_psnr': h.cover_psnr,
+            'cover_ssim': h.cover_ssim,
+            'stego_psnr': h.stego_psnr,
+            'stego_ssim': h.stego_ssim,
+            'stego_ber': h.stego_ber,
+            'confidence': h.confidence
         } for h in history
     ])
 

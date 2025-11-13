@@ -246,7 +246,7 @@ function Steganography() {
               cursor: 'pointer',
               border: '2px dashed',
               borderColor: isDragActive ? 'primary.main' : 'grey.400',
-              bgcolor: isDragActive ? 'action.hover' : 'background.paper'
+              bgcolor: isDragActive ? 'action.hover' : 'background.paper',
             }}
           >
             <input {...getInputProps()} />
@@ -258,8 +258,29 @@ function Steganography() {
                 <img
                   src={coverPreview}
                   alt="Cover"
-                  style={{ maxWidth: '100%', maxHeight: '500px', objectFit: 'contain' }}
+                  style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain', border: '1px solid #ddd' }}
                 />
+                {/* Cover Image Metrics */}
+                <Box sx={{ mt: 2 }}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Paper sx={{ p: 2, bgcolor: '#e3f2fd', textAlign: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">PSNR</Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                          N/A
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Paper sx={{ p: 2, bgcolor: '#e8f5e9', textAlign: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">SSIM</Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                          1.0000
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  </Grid>
+                </Box>
               </Box>
             ) : (
               <Typography>
@@ -279,7 +300,7 @@ function Steganography() {
                 <img
                   src={stegoPreview}
                   alt="Stego"
-                  style={{ maxWidth: '100%', maxHeight: '500px', objectFit: 'contain' }}
+                  style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain', border: '1px solid #ddd' }}
                 />
                 <Button
                   variant="contained"
@@ -289,6 +310,29 @@ function Steganography() {
                 >
                   Download Stego Image
                 </Button>
+                {/* Stego Image Metrics */}
+                {stegoMetrics && (
+                  <Box sx={{ mt: 2 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Paper sx={{ p: 2, bgcolor: '#e3f2fd', textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary">PSNR</Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                            {stegoMetrics.psnr?.toFixed(2) || 'N/A'} dB
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Paper sx={{ p: 2, bgcolor: '#e8f5e9', textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary">SSIM</Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                            {stegoMetrics.ssim?.toFixed(4) || 'N/A'}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
               </Box>
             ) : (
               <Typography color="text.secondary">
@@ -297,35 +341,6 @@ function Steganography() {
             )}
           </Paper>
         </Grid>
-
-        {/* Metrics Panel - shows after stego image is generated */}
-        {stegoMetrics && (
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3, bgcolor: '#f5f5f5', border: '2px solid #4caf50' }}>
-              <Typography variant="h6" gutterBottom color="primary" sx={{ fontWeight: 'bold' }}>
-                📊 Stego Image Metrics
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Paper sx={{ p: 2, bgcolor: '#e3f2fd', textAlign: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">PSNR</Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                      {stegoMetrics.psnr?.toFixed(2) || 'N/A'} dB
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Paper sx={{ p: 2, bgcolor: '#e8f5e9', textAlign: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">SSIM</Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
-                      {stegoMetrics.ssim?.toFixed(4) || 'N/A'}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-        )}
 
         <Grid item xs={12}>
           <TextField

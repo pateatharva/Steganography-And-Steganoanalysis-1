@@ -16,6 +16,8 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   Delete as DeleteIcon,
@@ -25,7 +27,6 @@ import {
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 
 function History() {
   const [history, setHistory] = useState([]);
@@ -33,6 +34,8 @@ function History() {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [shareLink, setShareLink] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,15 +45,16 @@ function History() {
   const fetchHistory = async () => {
     try {
       setLoading(true);
+      setError('');
       
       const token = localStorage.getItem('token');
       if (!token) {
-        toast.error('Please login again');
+        setError('Please login again');
         navigate('/login');
         return;
       }
 
-      const response = await axios.get('http://localhost:5000/api/history', {
+      const response = await axios.get('http://127.0.0.1:5000/api/history', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -58,18 +62,18 @@ function History() {
         setHistory(response.data);
       } else {
         console.error('Invalid history data format:', response.data);
-        toast.error('Received invalid data format from server');
+        setError('Received invalid data format from server');
       }
     } catch (error) {
       console.error('Error fetching history:', error);
       
       if (error.response?.status === 401) {
-        toast.error('Session expired. Please login again');
+        setError('Session expired. Please login again');
         navigate('/login');
       } else if (error.message === 'Network Error') {
-        toast.error('Network error. Please check your connection');
+        setError('Network error. Please check your connection');
       } else {
-        toast.error(error.response?.data?.error || 'Failed to load history');
+        setError(error.response?.data?.error || 'Failed to load history');
       }
     } finally {
       setLoading(false);
@@ -79,14 +83,14 @@ function History() {
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/history/${id}`, {
+      await axios.delete(`http://127.0.0.1:5000/api/history/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchHistory();
-      toast.success('Entry deleted successfully');
+      setSuccess('Entry deleted successfully');
     } catch (error) {
       console.error('Error deleting entry:', error);
-      toast.error('Failed to delete entry');
+      setError('Failed to delete entry');
     }
   };
 
@@ -96,29 +100,29 @@ function History() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `http://localhost:5000/api/share`,
+        `http://127.0.0.1:5000/api/share`,
         { historyId: item.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setShareLink(response.data.shareLink);
     } catch (error) {
       console.error('Error generating share link:', error);
-      toast.error('Failed to generate share link');
+      setError('Failed to generate share link');
     }
   };
 
   const handleFavorite = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/favorites`, {
+      await axios.post(`http://127.0.0.1:5000/api/favorites`, {
         historyId: id
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success('Added to favorites');
+      setSuccess('Added to favorites');
     } catch (error) {
       console.error('Error adding to favorites:', error);
-      toast.error('Failed to add to favorites');
+      setError('Failed to add to favorites');
     }
   };
 
@@ -126,7 +130,7 @@ function History() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/download/${item.id}`,
+        `http://127.0.0.1:5000/api/download/${item.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'
@@ -143,7 +147,7 @@ function History() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading file:', error);
-      toast.error('Failed to download file');
+      setError('Failed to download file');
     }
   };
 
@@ -153,7 +157,30 @@ function History() {
         Processing History
       </Typography>
 
-      <TableContainer component={Paper}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+      
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      )}
+
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress />
+        </Box>
+      ) : history.length === 0 ? (
+        <Paper sx={{ p: 3, textAlign: 'center' }}>
+          <Typography color="text.secondary">
+            No processing history yet. Start by hiding or extracting messages!
+          </Typography>
+        </Paper>
+      ) : (
+        <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -173,7 +200,7 @@ function History() {
                 <TableCell>
                   {item.image_path && (
                     <img
-                      src={`http://localhost:5000${item.image_path}`}
+                      src={`http://127.0.0.1:5000${item.image_path}`}
                       alt="Stego"
                       style={{ height: '50px' }}
                     />
@@ -198,6 +225,7 @@ function History() {
           </TableBody>
         </Table>
       </TableContainer>
+      )}
 
       <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)}>
         <DialogTitle>Share Image</DialogTitle>
@@ -216,7 +244,7 @@ function History() {
         <DialogActions>
           <Button onClick={() => {
             navigator.clipboard.writeText(shareLink);
-            toast.success('Link copied to clipboard');
+            setSuccess('Link copied to clipboard');
           }}>
             Copy Link
           </Button>

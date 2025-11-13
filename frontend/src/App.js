@@ -15,6 +15,7 @@ import Steganalysis from './components/Steganalysis';
 import History from './components/History';
 import Settings from './components/Settings';
 import Profile from './components/Profile';
+import Reports from './components/Reports';
 import Layout from './components/Layout';
 
 const theme = createTheme({
@@ -106,6 +107,7 @@ function App() {
               <Route path="decode" element={<Decoder />} />
               <Route path="steganalysis" element={<Steganalysis />} />
               <Route path="history" element={<History />} />
+              <Route path="reports" element={<Reports />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
             </Route>

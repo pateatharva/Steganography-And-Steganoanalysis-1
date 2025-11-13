@@ -8,6 +8,7 @@ import {
   CardContent,
   CircularProgress,
   Button,
+  Alert,
 } from '@mui/material';
 import {
   Timeline,
@@ -25,7 +26,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from 'recharts';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 import axios from 'axios';
 
 function Dashboard() {
@@ -51,8 +54,8 @@ function Dashboard() {
 
       // Fetch stats and history
       const [statsRes, historyRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/stats', { headers }).catch((e) => ({ _error: e })),
-        axios.get('http://localhost:5000/api/history', { headers }).catch((e) => ({ _error: e }))
+        axios.get('http://127.0.0.1:5000/api/stats', { headers }).catch((e) => ({ _error: e })),
+        axios.get('http://127.0.0.1:5000/api/history', { headers }).catch((e) => ({ _error: e }))
       ]);
 
       if (statsRes && !statsRes._error) {
@@ -87,12 +90,31 @@ function Dashboard() {
 
   return (
     <Box p={3}>
-      <Typography variant="h3" gutterBottom sx={{ fontWeight: 700 }}>
-        Resilient Steganography and Stegnoanalysis
-      </Typography>
-      <Typography variant="subtitle1" gutterBottom color="textSecondary">
-        A broad, robust platform for hiding, decoding and analyzing hidden data in images.
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h3" gutterBottom sx={{ fontWeight: 700 }}>
+            Resilient Steganography and Steganoanalysis
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom color="textSecondary">
+            A broad, robust platform for hiding, decoding and analyzing hidden data in images.
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={fetchData}
+          disabled={loading}
+        >
+          Refresh
+        </Button>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
         {/* Statistics Cards */}
         <Grid item xs={12} md={4}>
@@ -102,7 +124,7 @@ function Dashboard() {
               {loading && !stats ? (
                 <CircularProgress size={28} />
               ) : (
-                <Typography variant="h3">{stats?.total_operations || 0}</Typography>
+                <Typography variant="h3">{stats?.totalOperations || 0}</Typography>
               )}
             </CardContent>
           </Card>
@@ -114,7 +136,7 @@ function Dashboard() {
               {loading && !stats ? (
                 <CircularProgress size={28} />
               ) : (
-                <Typography variant="h3">{stats?.success_rate ? `${stats.success_rate.toFixed(1)}%` : '0%'}</Typography>
+                <Typography variant="h3">{stats?.successRate ? `${stats.successRate}%` : '0%'}</Typography>
               )}
             </CardContent>
           </Card>
@@ -126,7 +148,7 @@ function Dashboard() {
               {loading && !stats ? (
                 <CircularProgress size={28} />
               ) : (
-                <Typography variant="h3">{stats?.recent_operations?.length || 0}</Typography>
+                <Typography variant="h3">{stats?.recentOperations?.length || 0}</Typography>
               )}
             </CardContent>
           </Card>
@@ -142,19 +164,35 @@ function Dashboard() {
               {history && history.length > 0 ? (
                 <ResponsiveContainer>
                   <BarChart
-                    data={history.slice(-7)}
+                    data={(() => {
+                      // Group operations by type and count them
+                      const grouped = history.reduce((acc, item) => {
+                        const type = item.operation_type || 'Unknown';
+                        if (!acc[type]) {
+                          acc[type] = { operation_type: type, count: 0, success: 0 };
+                        }
+                        acc[type].count += 1;
+                        if (item.success) acc[type].success += 1;
+                        return acc;
+                      }, {});
+                      return Object.values(grouped);
+                    })()}
                     margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="operation_type" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="message_length" fill="#8884d8" />
+                    <Legend />
+                    <Bar dataKey="count" fill="#8884d8" name="Total" />
+                    <Bar dataKey="success" fill="#82ca9d" name="Successful" />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <Box sx={{ p: 2 }}>
-                  <Typography color="textSecondary">No recent history to display.</Typography>
+                <Box sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography color="textSecondary">
+                    No activity data yet. Start using steganography features to see statistics!
+                  </Typography>
                 </Box>
               )}
             </Box>
@@ -168,12 +206,12 @@ function Dashboard() {
               Recent Activity
             </Typography>
             <Timeline>
-              {(stats?.recent_operations && stats.recent_operations.length > 0) ? (
-                stats.recent_operations.map((op, index) => (
+              {(stats?.recentOperations && stats.recentOperations.length > 0) ? (
+                stats.recentOperations.map((op, index) => (
                   <TimelineItem key={op.id || index}>
                     <TimelineSeparator>
                       <TimelineDot color={op.success ? 'success' : 'error'} />
-                      {index < (stats.recent_operations.length - 1) && <TimelineConnector />}
+                      {index < (stats.recentOperations.length - 1) && <TimelineConnector />}
                     </TimelineSeparator>
                     <TimelineContent>
                       <Typography variant="subtitle2">{op.operation_type}</Typography>

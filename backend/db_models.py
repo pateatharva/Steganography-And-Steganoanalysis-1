@@ -27,12 +27,22 @@ class User(db.Model):
 class ProcessingHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    operation_type = db.Column(db.String(50))  # 'encode' or 'decode'
-    image_path = db.Column(db.String(200))
+    operation_type = db.Column(db.String(50))  # 'encode', 'decode', or 'analyze'
+    image_path = db.Column(db.String(200))  # Stego image path
     message_length = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     success = db.Column(db.Boolean, default=True)
     share_link = db.Column(db.String(100), unique=True)
+    # Metrics for cover image (original)
+    cover_path = db.Column(db.String(200))  # Path to cover image
+    cover_psnr = db.Column(db.Float)  # Cover PSNR (perfect = 100.0)
+    cover_ssim = db.Column(db.Float)  # Cover SSIM (perfect = 1.0)
+    # Metrics for stego image (with hidden message)
+    stego_psnr = db.Column(db.Float)  # Stego PSNR
+    stego_ssim = db.Column(db.Float)  # Stego SSIM
+    stego_ber = db.Column(db.Float)  # Bit Error Rate for stego
+    # Steganalysis metrics
+    confidence = db.Column(db.Float)  # Steganalysis confidence score
 
 class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)

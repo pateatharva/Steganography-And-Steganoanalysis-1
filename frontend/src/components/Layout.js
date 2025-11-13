@@ -24,6 +24,7 @@ import {
   Settings as SettingsIcon,
   Person as PersonIcon,
   ExitToApp as LogoutIcon,
+  Assessment as ReportsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -63,6 +64,7 @@ function Layout({ children }) {
     { text: 'Decoder', icon: <ImageIcon />, path: '/decode' },
     { text: 'Steganalysis', icon: <ImageIcon />, path: '/steganalysis' },
     { text: 'History', icon: <HistoryIcon />, path: '/history' },
+    { text: 'Reports', icon: <ReportsIcon />, path: '/reports' },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
