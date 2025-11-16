@@ -93,12 +93,8 @@ function Steganography() {
             setStegoImage(stegoUrl);
             setStegoPreview(stegoUrl);
 
-            // --- NEW: generate PSNR (random) and SSIM (random) in requested ranges ---
-            // Keep backend stego_metrics if provided but override psnr/ssim with randomized values
+            // Use real PSNR and SSIM values from backend (not random)
             const backendStegoMetrics = response.data.stego_metrics || { psnr: null, ssim: null, ber: null };
-
-            const randomPsnr = parseFloat((43 + Math.random() * (52 - 43)).toFixed(2));
-            const randomSsim = parseFloat((0.97 + Math.random() * (0.995 - 0.97)).toFixed(4));
 
             // We'll compute accuracy and BER by extracting the message from the generated stego image
             // Helper: convert text -> bit string
@@ -135,14 +131,8 @@ function Steganography() {
               return +(errors / maxLen).toFixed(6);
             };
 
-            // Set interim stego metrics with randomized psnr/ssim and placeholders for ber
-            const interimStegoMetrics = {
-              ...backendStegoMetrics,
-              psnr: randomPsnr,
-              ssim: randomSsim,
-              ber: backendStegoMetrics.ber !== undefined && backendStegoMetrics.ber !== null ? backendStegoMetrics.ber : null
-            };
-            setStegoMetrics(interimStegoMetrics);
+            // Use real backend metrics directly (PSNR, SSIM, BER calculated by backend)
+            setStegoMetrics(backendStegoMetrics);
 
             // Now fetch the stego image blob and send to extractor endpoint to compute character accuracy & BER
             try {
